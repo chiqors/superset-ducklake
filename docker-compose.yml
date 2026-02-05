@@ -1,0 +1,49 @@
+services:
+  postgres:
+    build:
+      context: ./docker
+      dockerfile: postgres.dockerfile
+    container_name: superset-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: superset
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  superset:
+    build:
+      context: ./docker
+    container_name: superset
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
+      ADMIN_USERNAME: "${ADMIN_USERNAME}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      # DuckLake Configuration
+      GCS_KEY_ID: "${GCS_KEY_ID}"
+      GCS_SECRET: "${GCS_SECRET}"
+      GCS_DATA_PATH: "${GCS_DATA_PATH}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    # volumes:
+    #   - ./data:/data
+    restart: unless-stopped
+    command: ["/app/superset-init.sh"]
+
+volumes:
+  pgdata:
