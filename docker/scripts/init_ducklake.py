@@ -21,8 +21,8 @@ if not all([GCS_KEY_ID, GCS_SECRET, DATA_PATH]):
     print("Please set them in docker-compose.yml")
     sys.exit(1)
 
-# Construct ATTACH URL
-attach_url = f"ducklake:postgres://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}?data_path={DATA_PATH}"
+# Construct Postgres connection string (libpq format)
+pg_conn_str = f"dbname={PG_DB} user={PG_USER} password={PG_PASS} host={PG_HOST} port={PG_PORT}"
 
 print(f"Initializing DuckLake DB at {DB_PATH}...")
 
@@ -33,6 +33,7 @@ try:
     # Install and Load Extensions
     print("Installing and loading extensions...")
     con.execute("INSTALL httpfs; LOAD httpfs;")
+    con.execute("INSTALL postgres; LOAD postgres;")
     
     try:
         con.execute("INSTALL ducklake; LOAD ducklake;")
@@ -57,12 +58,12 @@ try:
     print(f"Secrets found: {secrets}")
     
     # Attach Database
-    print(f"Attaching DuckLake with URL: {attach_url}")
+    print(f"Attaching DuckLake...")
     try:
         # Check if already attached
         dbs = con.execute("SELECT database_name FROM duckdb_databases() WHERE database_name = 'ducklake'").fetchall()
         if not dbs:
-            con.execute(f"ATTACH '{attach_url}' AS ducklake")
+            con.execute(f"ATTACH 'ducklake:postgres:{pg_conn_str}' AS ducklake (DATA_PATH '{DATA_PATH}')")
             print("Attached successfully.")
         else:
             print("Already attached.")

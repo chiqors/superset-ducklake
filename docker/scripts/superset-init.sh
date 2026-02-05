@@ -32,7 +32,7 @@ superset set_database_uri -d DuckDB-memory -u "duckdb:///:memory:" || true
 superset set_database_uri -d "DuckLake Analytics" -u "duckdb:///:memory:?allow_unsigned_extensions=true" || true
 
 echo "Configuring DuckLake permissions (DML/CTAS)..."
-python3 /app/docker/configure_superset_db.py "DuckLake Analytics" || echo "Failed to configure DuckLake permissions"
+python3 /app/docker/configure_superset_db.py || echo "Failed to configure DuckLake permissions"
 
 echo "Starting Gunicorn..."
 # High performance configuration:

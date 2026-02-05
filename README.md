@@ -131,6 +131,9 @@ git push origin v1.0.0
 | `SUPERSET_SECRET_KEY` | Security key (generated automatically) |
 | `POSTGRES_DUCKLAKE_DB` | DuckLake Metadata DB Name (default: `ducklake_analytics`) |
 | `POSTGRES_DUCKLAKE_HOST` | DuckLake Metadata DB Host |
+| `POSTGRES_DUCKLAKE_PORT` | DuckLake Metadata DB Port |
+| `POSTGRES_DUCKLAKE_USER` | DuckLake Metadata DB User |
+| `POSTGRES_DUCKLAKE_PASSWORD` | DuckLake Metadata DB Password |
 
 
 ### MotherDuck Integration

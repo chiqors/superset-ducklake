@@ -12,6 +12,7 @@ def configure_all_duckdb():
         print("Scanning all databases...")
         dbs = db.session.query(Database).all()
         
+        found_duck = False
         for database in dbs:
             print(f"Checking DB: '{database.database_name}' (URI: {database.sqlalchemy_uri})")
             
@@ -19,19 +20,29 @@ def configure_all_duckdb():
             is_duck = "duck" in database.database_name.lower() or "duckdb" in str(database.sqlalchemy_uri).lower()
             
             if is_duck:
+                found_duck = True
                 print(f"-> identified as DuckDB-related. Checking permissions...")
                 changed = False
                 
+                # Enable SQL Lab exposure
+                if not database.expose_in_sqllab:
+                    database.expose_in_sqllab = True
+                    print(f"  - Enabled expose_in_sqllab for {database.database_name}")
+                    changed = True
+
+                # Enable CTAS (Create Table As Select)
                 if not database.allow_ctas:
                     database.allow_ctas = True
                     print(f"  - Enabled allow_ctas for {database.database_name}")
                     changed = True
                     
+                # Enable CVAS (Create View As Select)
                 if not database.allow_cvas:
                     database.allow_cvas = True
                     print(f"  - Enabled allow_cvas for {database.database_name}")
                     changed = True
                     
+                # Enable DML (Data Manipulation Language - INSERT/UPDATE/DELETE)
                 if not database.allow_dml:
                     database.allow_dml = True
                     print(f"  - Enabled allow_dml for {database.database_name}")
@@ -46,6 +57,9 @@ def configure_all_duckdb():
                         print(f"  [ERROR] Failed to update {database.database_name}: {e}")
                 else:
                     print(f"  [OK] Configuration already correct for {database.database_name}")
+        
+        if not found_duck:
+            print("Warning: No DuckDB databases found to configure.")
 
 if __name__ == "__main__":
     configure_all_duckdb()
