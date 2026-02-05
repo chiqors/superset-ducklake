@@ -1,0 +1,111 @@
+services:
+  postgres:
+    build:
+      context: ./docker
+      dockerfile: postgres.dockerfile
+    container_name: superset-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: superset
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:latest
+    container_name: superset_cache
+    restart: unless-stopped
+    volumes:
+      - valkey_data:/data
+
+  superset:
+    build:
+      context: ./docker
+    container_name: superset
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    ports:
+      - "8080:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
+      ADMIN_USERNAME: "${ADMIN_USERNAME}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      
+      # Redis/Valkey Config
+      REDIS_HOST: valkey
+      REDIS_PORT: 6379
+
+      # DuckLake Configuration
+      GCS_KEY_ID: "${GCS_KEY_ID}"
+      GCS_SECRET: "${GCS_SECRET}"
+      GCS_DATA_PATH: "${GCS_DATA_PATH}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+
+      # MotherDuck Configuration (Optional - Uncomment to enable)
+      # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
+
+    # volumes:
+    #   - ./data:/data
+    restart: unless-stopped
+    command: ["/app/superset-init.sh"]
+
+  superset-worker:
+    build:
+      context: ./docker
+    container_name: superset_worker
+    command: ["celery", "--app=superset.tasks.celery_app:app", "worker", "--pool=gevent", "-c", "10", "--loglevel=INFO"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    environment:
+      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
+      SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
+      REDIS_HOST: valkey
+      REDIS_PORT: 6379
+      
+      # DuckLake Configuration (Workers need access for async queries)
+      GCS_KEY_ID: "${GCS_KEY_ID}"
+      GCS_SECRET: "${GCS_SECRET}"
+      GCS_DATA_PATH: "${GCS_DATA_PATH}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      
+      # MotherDuck Configuration (Optional - Uncomment to enable)
+      # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
+    restart: unless-stopped
+
+  superset-worker-beat:
+    build:
+      context: ./docker
+    container_name: superset_worker_beat
+    command: ["celery", "--app=superset.tasks.celery_app:app", "beat", "--loglevel=INFO"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    environment:
+      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
+      SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
+      REDIS_HOST: valkey
+      REDIS_PORT: 6379
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  valkey_data:

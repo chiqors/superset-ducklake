@@ -35,4 +35,13 @@ echo "Configuring DuckLake permissions (DML/CTAS)..."
 python3 /app/docker/configure_superset_db.py "DuckLake Analytics" || echo "Failed to configure DuckLake permissions"
 
 echo "Starting Gunicorn..."
-gunicorn -w 4 -k sync --timeout 300 -b 0.0.0.0:8088 "superset.app:create_app()"
+# High performance configuration:
+# - k gevent: Async workers for I/O bound apps
+# - w 10: Number of workers (adjust based on CPU cores, e.g., 2 x cores + 1)
+# - worker-connections 1000: Max simultaneous connections per worker
+
+WORKER_CLASS=${GUNICORN_WORKER_CLASS:-gevent}
+WORKERS=${GUNICORN_WORKERS:-10}
+TIMEOUT=${GUNICORN_TIMEOUT:-120}
+
+gunicorn -w $WORKERS -k $WORKER_CLASS --worker-connections 1000 --timeout $TIMEOUT -b 0.0.0.0:8088 "superset.app:create_app()"

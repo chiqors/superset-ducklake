@@ -13,10 +13,13 @@ graph TD
     Superset -->|DuckDB Engine| DuckDB["DuckDB (In-Memory)"]
     DuckDB -->|Attach| Postgres["Postgres (Metadata Store)"]
     DuckDB -->|Read/Write| GCS["Google Cloud Storage (Data Lake)"]
+    DuckDB -.->|Optional| MotherDuck["MotherDuck (Cloud)"]
     
-    subgraph "Superset Container"
+    subgraph "Superset Stack"
         Superset
         DuckDB
+        Valkey["Valkey (Cache/Broker)"]
+        Worker["Celery Worker"]
     end
     
     subgraph "Persistence Layer"
@@ -29,28 +32,20 @@ graph TD
 - **Stateless Application**: No analytic data is stored in the Superset container.
 - **Persistent Metadata**: DuckLake catalogs are stored in the `ducklake_analytics` PostgreSQL database.
 - **Secure Credentials**: GCS credentials are managed via environment variables and persistent DuckDB secrets.
-- **Automated Setup**: Custom initialization scripts handle database creation, extension loading, and permission configuration.
-- **Additional Drivers**: Pre-installed support for **BigQuery** and **Trino**.
+- **Scalable Architecture**: 
+  - **Simple Mode**: Monolithic container for development.
+  - **Production Mode**: Microservices with Async Workers, **Valkey** caching, and **Celery**.
+- **MotherDuck Support**: Optional integration for cloud-native scaling.
 
 ## Prerequisites
 
 - Docker & Docker Compose
 - Google Cloud Storage (GCS) Bucket and HMAC Keys (Access Key & Secret)
+- (Optional) MotherDuck Token
 
-## Configuration
+## Quick Start (Simple Mode)
 
-The setup is controlled via environment variables in `docker-compose.yml`.
-
-### Essential Variables
-
-| Variable | Description |
-|----------|-------------|
-| `GCS_KEY_ID` | GCS HMAC Access Key |
-| `GCS_SECRET` | GCS HMAC Secret |
-| `GCS_DATA_PATH` | Base GCS URI (e.g., `gs://my-analytics-bucket/`) |
-| `POSTGRES_DB` | Name of the metadata database (default: `ducklake_analytics`) |
-
-## Getting Started
+Ideal for development, testing, or small teams. Runs Superset as a single service without async workers.
 
 1.  **Clone the repository**:
     ```bash
@@ -58,9 +53,12 @@ The setup is controlled via environment variables in `docker-compose.yml`.
     cd superset
     ```
 
-2.  **Update Credentials**:
-    Edit `docker-compose.yml` and set your `GCS_KEY_ID` and `GCS_SECRET`.
-    *(Recommended: Use a `.env` file for production credentials)*
+2.  **Configure Environment**:
+    Copy the example file and update it with your credentials:
+    ```bash
+    cp .env.example .env
+    # Edit .env and set GCS_KEY_ID, GCS_SECRET, GCS_DATA_PATH
+    ```
 
 3.  **Start Services**:
     ```bash
@@ -69,14 +67,48 @@ The setup is controlled via environment variables in `docker-compose.yml`.
 
 4.  **Access Superset**:
     - URL: `http://localhost:8080`
-    - Username: `admin`
-    - Password: `admin`
+    - User: `admin` / `admin`
 
-5.  **Verify Connection**:
-    - Go to **SQL Lab**.
-    - Select Database: **DuckLake Analytics**.
-    - Schema: `main` (or your specific schema).
-    - You should see your GCS tables listed.
+## Production Setup (High Performance)
+
+Ideal for high traffic, multiple analysts, and heavy query loads. Uses **Valkey** for caching and **Celery** for asynchronous query execution.
+
+1.  **Configure Environment**:
+    Ensure `.env` is populated (same as above).
+
+2.  **Start Services (Production Profile)**:
+    ```bash
+    docker compose -f docker-compose-prod.yml up -d --build
+    ```
+
+    This launches:
+    - **superset**: Web server (Gunicorn with async `gevent` workers).
+    - **superset-worker**: Dedicated worker for SQL execution.
+    - **superset-worker-beat**: Scheduler.
+    - **valkey**: High-performance cache & message broker (Redis compatible).
+    - **postgres**: Metadata store.
+
+## Configuration
+
+### Environment Variables (`.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `GCS_KEY_ID` | GCS HMAC Access Key |
+| `GCS_SECRET` | GCS HMAC Secret |
+| `GCS_DATA_PATH` | Base GCS URI (e.g., `gs://my-analytics-bucket/`) |
+| `MOTHERDUCK_TOKEN` | (Optional) Token for MotherDuck integration |
+| `SUPERSET_SECRET_KEY` | Security key (generated automatically) |
+
+### MotherDuck Integration
+To enable MotherDuck (cloud-hosted DuckDB):
+1.  Add `MOTHERDUCK_TOKEN=your_token` to your `.env` file.
+2.  Restart the containers.
+3.  The extension will be automatically loaded on connection.
+
+### Performance Tuning
+- **Caching**: Configured in `superset_config.py` to use Valkey for query results, dashboards, and explore state.
+- **Workers**: `superset-init.sh` automatically detects the environment and tunes Gunicorn workers (default: 10 async workers).
 
 ## Usage Guide
 
@@ -107,10 +139,11 @@ Then query `my_view` in Superset.
 
 - `docker/`: Docker configuration and scripts.
   - `scripts/`: Initialization and configuration scripts.
-  - `superset_config.py`: Superset Python configuration (hooks for DuckLake).
-- `docker-compose.yml`: Service orchestration.
+  - `superset_config.py`: Superset Python configuration (hooks for DuckLake, Caching, Celery).
+- `docker-compose.yml`: **Simple/Dev** orchestration.
+- `docker-compose-prod.yml`: **Production** orchestration (Valkey, Workers).
 
 ## Troubleshooting
 
-- **"No such file or directory" during attach**: Ensure the Postgres service is healthy and the `POSTGRES_DB` exists (handled automatically by `psql-multiple-postgres.sh`).
-- **Permission Denied**: Ensure `allow_dml`, `allow_ctas`, and `allow_cvas` are enabled for the database (handled automatically by `configure_superset_db.py`).
+- **"No such file or directory" during attach**: Ensure the Postgres service is healthy and the `POSTGRES_DB` exists.
+- **Async Queries Stuck**: If running in Production mode, ensure `superset-worker` is running and connected to `valkey`. Check logs: `docker logs superset_worker`.

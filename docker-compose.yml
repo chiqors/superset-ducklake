@@ -35,14 +35,24 @@ services:
       ADMIN_USERNAME: "${ADMIN_USERNAME}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      
+      # No Redis/Valkey for simple setup
+      REDIS_HOST: ""
+
       # DuckLake Configuration
       GCS_KEY_ID: "${GCS_KEY_ID}"
       GCS_SECRET: "${GCS_SECRET}"
       GCS_DATA_PATH: "${GCS_DATA_PATH}"
       POSTGRES_DB: "${POSTGRES_DB}"
+
+      # MotherDuck Configuration (Optional - Uncomment to enable)
+      # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
+
     # volumes:
     #   - ./data:/data
     restart: unless-stopped
+    # Use sync worker for simple setup to avoid async complexity without workers
+    # Or keep gevent but ensure low worker count
     command: ["/app/superset-init.sh"]
 
 volumes:
