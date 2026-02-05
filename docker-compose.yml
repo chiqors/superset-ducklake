@@ -43,9 +43,11 @@ services:
       GCS_KEY_ID: "${GCS_KEY_ID}"
       GCS_SECRET: "${GCS_SECRET}"
       GCS_DATA_PATH: "${GCS_DATA_PATH}"
-      POSTGRES_DB: "${POSTGRES_DB}"
-      POSTGRES_HOST: "postgres"
-      POSTGRES_PORT: "5432"
+      POSTGRES_DUCKLAKE_DB: "${POSTGRES_DUCKLAKE_DB:-ducklake_analytics}"
+      POSTGRES_DUCKLAKE_USER: "${POSTGRES_DUCKLAKE_USER:-superset}"
+      POSTGRES_DUCKLAKE_PASSWORD: "${POSTGRES_DUCKLAKE_PASSWORD:-superset}"
+      POSTGRES_DUCKLAKE_HOST: "${POSTGRES_DUCKLAKE_HOST:-postgres}"
+      POSTGRES_DUCKLAKE_PORT: "${POSTGRES_DUCKLAKE_PORT:-5432}"
 
       # MotherDuck Configuration (Optional - Uncomment to enable)
       # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"

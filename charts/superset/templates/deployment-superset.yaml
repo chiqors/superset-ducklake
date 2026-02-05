@@ -105,21 +105,31 @@ spec:
                 configMapKeyRef:
                   name: {{ include "superset.fullname" . }}-config
                   key: GCS_DATA_PATH
-            - name: POSTGRES_DB
+            - name: POSTGRES_DUCKLAKE_DB
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "superset.fullname" . }}-config
-                  key: POSTGRES_DB
-            - name: POSTGRES_HOST
+                  key: POSTGRES_DUCKLAKE_DB
+            - name: POSTGRES_DUCKLAKE_HOST
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "superset.fullname" . }}-config
-                  key: POSTGRES_HOST
-            - name: POSTGRES_PORT
+                  key: POSTGRES_DUCKLAKE_HOST
+            - name: POSTGRES_DUCKLAKE_PORT
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "superset.fullname" . }}-config
-                  key: POSTGRES_PORT
+                  key: POSTGRES_DUCKLAKE_PORT
+            - name: POSTGRES_DUCKLAKE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: POSTGRES_DUCKLAKE_USER
+            - name: POSTGRES_DUCKLAKE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: POSTGRES_DUCKLAKE_PASSWORD
             {{- if .Values.superset.motherduck.token }}
             - name: MOTHERDUCK_TOKEN
               valueFrom:

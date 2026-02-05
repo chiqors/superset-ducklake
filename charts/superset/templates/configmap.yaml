@@ -12,10 +12,10 @@ data:
   REDIS_CELERY_DB: {{ .Values.externalRedis.celeryDb | quote }}
   REDIS_RESULTS_DB: {{ .Values.externalRedis.resultsDb | quote }}
   REDIS_CACHE_DB: {{ .Values.externalRedis.cacheDb | quote }}
-  POSTGRES_DB: {{ .Values.externalPostgres.database | quote }}
-  POSTGRES_USER: {{ .Values.externalPostgres.username | quote }}
-  POSTGRES_HOST: {{ .Values.externalPostgres.host | quote }}
-  POSTGRES_PORT: {{ .Values.externalPostgres.port | quote }}
+  POSTGRES_DUCKLAKE_DB: {{ .Values.ducklakePostgres.database | quote }}
+  POSTGRES_DUCKLAKE_USER: {{ .Values.ducklakePostgres.username | quote }}
+  POSTGRES_DUCKLAKE_HOST: {{ .Values.ducklakePostgres.host | quote }}
+  POSTGRES_DUCKLAKE_PORT: {{ .Values.ducklakePostgres.port | quote }}
   ADMIN_USERNAME: {{ .Values.superset.admin.username | quote }}
   ADMIN_EMAIL: {{ .Values.superset.admin.email | quote }}
   GCS_DATA_PATH: {{ .Values.superset.gcs.dataPath | quote }}

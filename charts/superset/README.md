@@ -35,11 +35,19 @@ A production-ready Helm chart for deploying Apache Superset with DuckLake integr
       repository: ghcr.io/your-org/superset
       tag: latest
     
-    # External Postgres (Required)
+    # External Postgres (Superset Metadata)
     externalPostgres:
       host: "my-postgres.rds.amazonaws.com"
       port: 5432
       database: "superset"
+      username: "superset_user"
+      password: "secure_password"
+    
+    # External Postgres (DuckLake Metadata)
+    ducklakePostgres:
+      host: "my-postgres.rds.amazonaws.com"
+      port: 5432
+      database: "ducklake_analytics"
       username: "superset_user"
       password: "secure_password"
     
@@ -78,7 +86,8 @@ A production-ready Helm chart for deploying Apache Superset with DuckLake integr
 | `service.type` | Kubernetes Service type | `ClusterIP` |
 | `worker.enabled` | Enable Celery workers | `true` |
 | `worker.replicas` | Number of worker replicas | `1` |
-| `externalPostgres.host` | Postgres hostname | `postgres-host` |
+| `externalPostgres.host` | Postgres hostname (Superset Metadata) | `postgres-host` |
+| `ducklakePostgres.host` | Postgres hostname (DuckLake Metadata) | `postgres-host` |
 | `externalRedis.host` | Redis/Valkey hostname | `valkey-host` |
 | `commonLabels` | Labels to apply to all resources | `{}` |
 | `namespaceOverride` | Override the release namespace | `""` |

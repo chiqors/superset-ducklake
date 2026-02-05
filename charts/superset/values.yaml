@@ -80,12 +80,21 @@ workerBeat:
   command: ["celery", "--app=superset.tasks.celery_app:app", "beat", "--loglevel=INFO"]
   resources: {}
 
-# External Database (Postgres)
+# External Database (Superset Metadata - Postgres)
 # REQUIRED: You must provide external Postgres connection details
 externalPostgres:
   host: "postgres-host"
   port: 5432
   database: "superset"
+  username: "superset"
+  password: "superset_password"
+
+# External Database (DuckLake Metadata - Postgres)
+# REQUIRED: Can be same instance as above but different DB
+ducklakePostgres:
+  host: "postgres-host"
+  port: 5432
+  database: "ducklake_analytics"
   username: "superset"
   password: "superset_password"
 

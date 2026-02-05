@@ -129,6 +129,9 @@ git push origin v1.0.0
 | `GCS_DATA_PATH` | Base GCS URI (e.g., `gs://my-analytics-bucket/`) |
 | `MOTHERDUCK_TOKEN` | (Optional) Token for MotherDuck integration |
 | `SUPERSET_SECRET_KEY` | Security key (generated automatically) |
+| `POSTGRES_DUCKLAKE_DB` | DuckLake Metadata DB Name (default: `ducklake_analytics`) |
+| `POSTGRES_DUCKLAKE_HOST` | DuckLake Metadata DB Host |
+
 
 ### MotherDuck Integration
 To enable MotherDuck (cloud-hosted DuckDB):

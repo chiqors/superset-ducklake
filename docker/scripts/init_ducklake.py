@@ -5,11 +5,11 @@ import sys
 DB_PATH = ':memory:'
 
 # Define connection parameters from environment variables
-PG_USER = os.environ.get('POSTGRES_USER', 'superset')
-PG_PASS = os.environ.get('POSTGRES_PASSWORD', 'superset')
-PG_HOST = os.environ.get('POSTGRES_HOST', 'postgres')
-PG_PORT = os.environ.get('POSTGRES_PORT', '5432')
-PG_DB = os.environ.get('POSTGRES_DB', 'ducklake_analytics')
+PG_USER = os.environ.get('POSTGRES_DUCKLAKE_USER', 'superset')
+PG_PASS = os.environ.get('POSTGRES_DUCKLAKE_PASSWORD', 'superset')
+PG_HOST = os.environ.get('POSTGRES_DUCKLAKE_HOST', 'postgres')
+PG_PORT = os.environ.get('POSTGRES_DUCKLAKE_PORT', '5432')
+PG_DB = os.environ.get('POSTGRES_DUCKLAKE_DB', 'ducklake_analytics')
 
 # GCS Credentials from environment variables
 GCS_KEY_ID = os.environ.get('GCS_KEY_ID')
