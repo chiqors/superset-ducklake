@@ -10,7 +10,8 @@ This repository contains a production-ready configuration for Apache Superset in
 ```mermaid
 graph TD
     User[User] -->|SQL/UI| Superset
-    Superset -->|DuckDB Engine| DuckDB["DuckDB (In-Memory)"]
+    Superset -->|DuckDB Engine| DuckDB["DuckLake Analytics (In-Memory)"]
+    Superset -->|Postgres Engine| PGMetadata["DuckLake Metadata (Postgres)"]
     DuckDB -->|Attach| Postgres["Postgres (Metadata Store)"]
     DuckDB -->|Read/Write| GCS["Google Cloud Storage (Data Lake)"]
     DuckDB -.->|Optional| MotherDuck["MotherDuck (Cloud)"]
@@ -25,12 +26,16 @@ graph TD
     subgraph "Persistence Layer"
         Postgres
         GCS
+        PGMetadata
     end
 ```
 
 ### Key Features
 - **Stateless Application**: No analytic data is stored in the Superset container.
 - **Persistent Metadata**: DuckLake catalogs are stored in the `ducklake_analytics` PostgreSQL database.
+- **Dual Connection**:
+    - **DuckLake Analytics**: The high-performance DuckDB engine for querying your data lake.
+    - **DuckLake Metadata**: A direct Postgres connection to inspect your schemas, tables, and internal DuckDB metadata.
 - **Secure Credentials**: GCS credentials are managed via environment variables and persistent DuckDB secrets.
 - **Scalable Architecture**: 
   - **Simple Mode**: Monolithic container for development.
@@ -148,8 +153,13 @@ To enable MotherDuck (cloud-hosted DuckDB):
 
 ## Usage Guide
 
+### Database Connections
+When you log in to Superset, you will see two pre-configured databases:
+1. **DuckLake Analytics**: This is the primary engine. Use this to run SQL queries against your GCS data lake (e.g., `SELECT * FROM 'gs://...'` or querying tables created via `CREATE TABLE`).
+2. **DuckLake Metadata**: This connects directly to the backend Postgres database storing the DuckDB catalog. Use this to inspect table definitions, schemas, and internal metadata if needed.
+
 ### Creating Tables (DDL)
-You can create tables directly in SQL Lab. Metadata will be stored in Postgres, and data files will be written to GCS.
+You can create tables directly in SQL Lab using the **DuckLake Analytics** connection. Metadata will be stored in Postgres, and data files will be written to GCS.
 
 ```sql
 CREATE TABLE my_table AS SELECT * FROM 'gs://public-data/file.parquet';
