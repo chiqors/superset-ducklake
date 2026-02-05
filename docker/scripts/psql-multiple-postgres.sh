@@ -31,6 +31,6 @@ fi
 
 # Explicitly create ducklake_analytics database owned by the main user (superset)
 # This avoids creating a separate 'ducklake_analytics' user
-DATABASE="ducklake_analytics"
+DATABASE="${POSTGRES_DUCKLAKE_DB:-ducklake_analytics}"
 echo "  Creating database '$DATABASE' owned by '$POSTGRES_USER'"
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -tc "SELECT 1 FROM pg_database WHERE datname = '$DATABASE'" | grep -q 1 || psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -c "CREATE DATABASE $DATABASE OWNER $POSTGRES_USER"

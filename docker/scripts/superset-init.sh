@@ -23,13 +23,16 @@ python3 /app/docker/init_ducklake.py || echo "DuckLake initialization failed, sk
 
 # Configure Databases
 echo "Configuring databases..."
-# In-memory DuckDB (ephemeral)
-superset set_database_uri -d DuckDB-memory -u "duckdb:///:memory:" || true
 
 # DuckLake (In-Memory with Hook)
 # We use :memory: to avoid file locking issues with multiple Gunicorn workers
 # The connection hook in superset_config.py will attach the persistent DuckLake
 superset set_database_uri -d "DuckLake Analytics" -u "duckdb:///:memory:?allow_unsigned_extensions=true" || true
+
+# DuckLake Metadata (Postgres)
+# This allows browsing the DuckLake metadata directly in Superset via Postgres
+DUCKLAKE_PG_URI="postgresql://${POSTGRES_DUCKLAKE_USER:-superset}:${POSTGRES_DUCKLAKE_PASSWORD:-superset}@${POSTGRES_DUCKLAKE_HOST:-postgres}:${POSTGRES_DUCKLAKE_PORT:-5432}/${POSTGRES_DUCKLAKE_DB:-ducklake_analytics}"
+superset set_database_uri -d "DuckLake Metadata" -u "$DUCKLAKE_PG_URI" || true
 
 echo "Configuring DuckLake permissions (DML/CTAS)..."
 python3 /app/docker/configure_superset_db.py || echo "Failed to configure DuckLake permissions"
