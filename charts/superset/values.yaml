@@ -75,6 +75,18 @@ superset:
     urlStyle: "path" # 'path' or 'vhost'
     useSsl: "true"
   
+  # BigQuery Configuration (Optional)
+  bigquery:
+    enabled: false
+    projectId: ""
+    # All datasets in the project will be accessible via bq.dataset_name.table_name
+    # Service account JSON content (will be stored as Kubernetes secret)
+    # Can be provided as base64 encoded string or plain JSON string
+    serviceAccountJson: ""
+    # Alternative: reference existing secret
+    existingSecret: ""
+    existingSecretKey: "service-account.json"
+  
   # MotherDuck (Optional)
   motherduck:
     token: ""

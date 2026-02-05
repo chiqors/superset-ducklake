@@ -76,8 +76,17 @@ services:
       # MotherDuck Configuration (Optional - Uncomment to enable)
       # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
 
-    # volumes:
-    #   - ./data:/data
+      # BigQuery Configuration (optional)
+      # Set to true to enable BigQuery support via DuckDB BigQuery plugin
+      BIGQUERY_ENABLED: "${BIGQUERY_ENABLED}"
+      # Your GCP project ID - all datasets in this project will be accessible
+      BIGQUERY_PROJECT_ID: "${BIGQUERY_PROJECT_ID}"
+      # Path to service account JSON file (will be mounted from ./secrets/)
+      GOOGLE_APPLICATION_CREDENTIALS: "${GOOGLE_APPLICATION_CREDENTIALS}"
+
+    volumes:
+      - ./secrets:/app/secrets:ro
+
     restart: unless-stopped
     # Use sync worker for simple setup to avoid async complexity without workers
     # Or keep gevent but ensure low worker count

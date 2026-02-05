@@ -61,8 +61,13 @@ services:
       # MotherDuck Configuration (Optional - Uncomment to enable)
       # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
 
-    # volumes:
-    #   - ./data:/data
+      # BigQuery Configuration (optional)
+      BIGQUERY_ENABLED: ${BIGQUERY_ENABLED:-false}
+      BIGQUERY_PROJECT_ID: ${BIGQUERY_PROJECT_ID:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/secrets/bigquery-sa.json}
+
+    volumes:
+      - ./secrets:/app/secrets:ro
     restart: unless-stopped
     # Use sync worker for simple setup to avoid async complexity without workers
     # Or keep gevent but ensure low worker count

@@ -159,6 +159,22 @@ spec:
                   name: {{ include "superset.fullname" . }}-secret
                   key: MOTHERDUCK_TOKEN
             {{- end }}
+          {{- if .Values.superset.bigquery.enabled }}
+          volumeMounts:
+            - name: bigquery-sa
+              mountPath: /app/secrets/bigquery
+              readOnly: true
+          {{- end }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
+      {{- if .Values.superset.bigquery.enabled }}
+      volumes:
+        - name: bigquery-sa
+          secret:
+            secretName: {{ if .Values.superset.bigquery.existingSecret }}{{ .Values.superset.bigquery.existingSecret }}{{ else }}{{ include "superset.fullname" . }}-bigquery-sa{{ end }}
+            items:
+              - key: {{ .Values.superset.bigquery.existingSecretKey }}
+                path: service-account.json
+            defaultMode: 0400
+      {{- end }}
 {{- end }}

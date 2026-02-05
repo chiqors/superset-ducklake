@@ -39,6 +39,7 @@ graph TD
     - **DuckLake Analytics**: The high-performance DuckDB engine for querying your data lake.
     - **DuckLake Metadata**: A direct Postgres connection to inspect your schemas, tables, and internal DuckDB metadata.
 - **Multi-Cloud Support**: Connect to **GCS**, **AWS S3**, or self-hosted **MinIO** simultaneously.
+- **BigQuery Integration**: Native support for querying BigQuery datasets through DuckDB BigQuery plugin (Kubernetes deployment).
 - **Secure Credentials**: Credentials are managed via environment variables and persistent DuckDB secrets.
 - **Scalable Architecture**: 
   - **Simple Mode**: Monolithic container for development.
@@ -113,7 +114,17 @@ We provide a production-ready Helm chart in `charts/superset`.
       --set commonLabels.environment=production
     ```
 
-See [charts/superset/README.md](charts/superset/README.md) for detailed configuration options.
+See [`charts/superset/README.md`](charts/superset/README.md) for detailed configuration options.
+
+### BigQuery Integration (Kubernetes)
+
+The Helm chart includes native support for BigQuery integration through DuckDB. To enable BigQuery:
+
+1. Create a Kubernetes secret with your GCP service account JSON
+2. Configure BigQuery settings in `values.yaml`
+3. Deploy the chart
+
+For complete BigQuery configuration instructions, including security best practices and troubleshooting, see the [BigQuery Configuration section](charts/superset/README.md#bigquery-configuration) in the Helm chart README.
 
 ## CI/CD Pipeline
 

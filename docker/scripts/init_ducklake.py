@@ -27,6 +27,11 @@ S3_REGION = os.environ.get("S3_REGION", "us-east-1")
 S3_URL_STYLE = os.environ.get("S3_URL_STYLE", "path")
 S3_USE_SSL = os.environ.get("S3_USE_SSL", "true")
 
+# BigQuery Configuration
+BIGQUERY_ENABLED = os.getenv('BIGQUERY_ENABLED', 'false').lower() == 'true'
+BIGQUERY_PROJECT_ID = os.getenv('BIGQUERY_PROJECT_ID', '')
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '')
+
 # Validate required credentials based on driver
 if DUCKLAKE_STORAGE_DRIVER == 'gcs':
     if not (GCS_KEY_ID and GCS_SECRET and GCS_BUCKET_PATH):
@@ -62,6 +67,13 @@ try:
     except Exception as e:
         print(f"Warning: Failed to load ducklake extension: {e}")
     
+    # Install and load BigQuery extension if enabled
+    if BIGQUERY_ENABLED:
+        print("Installing BigQuery extension...")
+        con.execute("INSTALL bigquery FROM community;")
+        con.execute("LOAD bigquery;")
+        print("BigQuery extension loaded successfully")
+    
     # Create GCS Secret (always create if vars exist, regardless of driver, for flexibility)
     if GCS_KEY_ID and GCS_SECRET:
         print("Creating GCS secret...")
@@ -94,6 +106,36 @@ try:
             {', '.join(s3_secret_params)}
         );
         """)
+    
+    # Create BigQuery attachment if enabled
+    if BIGQUERY_ENABLED and BIGQUERY_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS:
+        print(f"Attaching BigQuery project: {BIGQUERY_PROJECT_ID}")
+        
+        # Verify service account file exists
+        if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+            # Use ATTACH to connect entire BigQuery project (all datasets)
+            attach_sql = f"""
+            ATTACH 'project={BIGQUERY_PROJECT_ID}' as bq (TYPE bigquery, READ_ONLY);
+            """
+            try:
+                con.execute(attach_sql)
+                print(f"BigQuery project '{BIGQUERY_PROJECT_ID}' attached successfully as 'bq'")
+                print("All datasets in the project are now accessible via bq.dataset_name.table_name")
+                
+                # Show available tables across all datasets
+                try:
+                    result = con.execute("SHOW ALL TABLES;").fetchall()
+                    if result:
+                        print(f"Found {len(result)} tables across all datasets")
+                except Exception as e:
+                    print(f"Note: Could not list tables: {e}")
+                    
+            except Exception as e:
+                print(f"Warning: Could not attach BigQuery project: {e}")
+        else:
+            print(f"Warning: Service account file not found at {GOOGLE_APPLICATION_CREDENTIALS}")
+    elif BIGQUERY_ENABLED:
+        print("Warning: BigQuery enabled but PROJECT_ID or GOOGLE_APPLICATION_CREDENTIALS not set")
     
     print("Verifying secret existence...")
     secrets = con.execute("SELECT * FROM duckdb_secrets()").fetchall()

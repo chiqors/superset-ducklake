@@ -25,3 +25,8 @@ data:
   S3_REGION: {{ .Values.superset.s3.region | quote }}
   S3_URL_STYLE: {{ .Values.superset.s3.urlStyle | quote }}
   S3_USE_SSL: {{ .Values.superset.s3.useSsl | quote }}
+  {{- if .Values.superset.bigquery.enabled }}
+  BIGQUERY_ENABLED: "true"
+  BIGQUERY_PROJECT_ID: {{ .Values.superset.bigquery.projectId | quote }}
+  GOOGLE_APPLICATION_CREDENTIALS: "/app/secrets/bigquery/service-account.json"
+  {{- end }}

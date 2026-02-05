@@ -6,3 +6,10 @@ __pycache__
 data/
 docker/scripts/__pycache__/
 rustfs-data/
+
+# Google Cloud Service Account Keys
+secrets/bigquery-sa.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json

@@ -109,6 +109,11 @@ S3_REGION = os.environ.get("S3_REGION", "us-east-1")
 S3_URL_STYLE = os.environ.get("S3_URL_STYLE", "path")
 S3_USE_SSL = os.environ.get("S3_USE_SSL", "true")
 
+# BigQuery Configuration
+BIGQUERY_ENABLED = os.environ.get('BIGQUERY_ENABLED', 'false').lower() == 'true'
+BIGQUERY_PROJECT_ID = os.environ.get('BIGQUERY_PROJECT_ID', '')
+GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+
 PG_USER = os.environ.get("POSTGRES_DUCKLAKE_USER", "superset")
 PG_PASS = os.environ.get("POSTGRES_DUCKLAKE_PASSWORD", "superset")
 PG_HOST = os.environ.get("POSTGRES_DUCKLAKE_HOST", "postgres")
@@ -149,6 +154,14 @@ def ducklake_connect(dbapi_connection, connection_record):
                 cursor.execute("INSTALL ducklake")
                 cursor.execute("LOAD ducklake")
                 
+                # Load BigQuery extension if enabled
+                if BIGQUERY_ENABLED:
+                    try:
+                        cursor.execute("LOAD bigquery")
+                        print("BigQuery extension loaded in Superset connection")
+                    except Exception as e:
+                        print(f"Warning: Could not load BigQuery extension: {e}")
+                
                 # 2. Create GCS Secret (if configured)
                 if GCS_KEY_ID and GCS_SECRET:
                     cursor.execute("DROP SECRET IF EXISTS gcs_secret")
@@ -180,6 +193,19 @@ def ducklake_connect(dbapi_connection, connection_record):
                             {', '.join(s3_secret_params)}
                         )
                     """)
+                
+                # Attach BigQuery project if enabled (all datasets)
+                if BIGQUERY_ENABLED and BIGQUERY_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS:
+                    if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+                        try:
+                            # Attach entire BigQuery project (all datasets accessible)
+                            attach_sql = f"""
+                            ATTACH IF NOT EXISTS 'project={BIGQUERY_PROJECT_ID}' as bq (TYPE bigquery, READ_ONLY);
+                            """
+                            cursor.execute(attach_sql)
+                            print(f"BigQuery project '{BIGQUERY_PROJECT_ID}' attached as 'bq'")
+                        except Exception as e:
+                            print(f"Warning: Could not attach BigQuery project: {e}")
 
                 # 4. Attach DuckLake (if DATA_PATH is available)
                 if DATA_PATH and PG_DB:
