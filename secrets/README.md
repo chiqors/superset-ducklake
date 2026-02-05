@@ -18,6 +18,8 @@ To use BigQuery with DuckDB:
    GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/bigquery-sa.json
    ```
 
+   **Note**: The BigQuery integration uses the ATTACH method, which provides access to **ALL datasets** in your project. You can query any table using the syntax: `bq.dataset_name.table_name`
+
 3. Restart your containers:
    ```bash
    docker-compose down

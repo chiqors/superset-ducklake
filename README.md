@@ -101,6 +101,52 @@ Ideal for high traffic, multiple analysts, and heavy query loads. Uses **Valkey*
     - **valkey**: High-performance cache & message broker (Redis compatible).
     - **postgres**: Metadata store.
 
+## BigQuery Integration (Docker Compose)
+
+To enable BigQuery support in your Docker Compose deployment:
+
+1. **Place your service account JSON file** in the `secrets/` directory:
+   ```bash
+   cp /path/to/your-service-account.json secrets/bigquery-sa.json
+   ```
+
+2. **Update your `.env` file**:
+   ```bash
+   # Enable BigQuery
+   BIGQUERY_ENABLED=true
+   BIGQUERY_PROJECT_ID=your-gcp-project-id
+   GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/bigquery-sa.json
+   ```
+
+3. **Restart your containers**:
+   ```bash
+   docker-compose down
+   docker-compose up -d
+   ```
+
+### Querying BigQuery
+
+The BigQuery integration uses the ATTACH method, which provides access to **ALL datasets** in your project. You can query any table using:
+
+```sql
+-- Query tables from any dataset in the project
+SELECT * FROM bq.dataset_name.table_name;
+
+-- Example: Cross-dataset queries
+SELECT
+  a.user_id,
+  b.campaign_name
+FROM bq.analytics.users a
+JOIN bq.marketing.campaigns b ON a.id = b.user_id;
+
+-- Discover available datasets and tables
+SHOW ALL TABLES;
+```
+
+**Note**: No dataset field is needed in the configuration. All datasets in the project are automatically accessible via the `bq.dataset_name.table_name` syntax.
+
+For detailed setup instructions, see [`secrets/README.md`](secrets/README.md).
+
 ## Kubernetes Deployment (Helm)
 
 We provide a production-ready Helm chart in `charts/superset`.
@@ -171,6 +217,14 @@ Required if `DUCKLAKE_STORAGE_DRIVER=s3`.
 | `S3_REGION` | S3 Region (default: `us-east-1`) |
 | `S3_URL_STYLE` | `path` (MinIO/GCS) or `vhost` (AWS) |
 | `S3_USE_SSL` | `true` or `false` |
+
+### BigQuery Configuration (Optional)
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `BIGQUERY_ENABLED` | Enable BigQuery support via DuckDB BigQuery plugin | `false` | No |
+| `BIGQUERY_PROJECT_ID` | Your GCP project ID. All datasets in this project will be accessible | - | Yes (if enabled) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Google Cloud service account JSON file | `/app/secrets/bigquery-sa.json` | Yes (if enabled) |
 
 ### Other
 | Variable | Description |
