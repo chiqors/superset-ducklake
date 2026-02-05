@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "superset.fullname" . }}-config
+  namespace: {{ include "superset.namespace" . }}
+  labels:
+    {{- include "superset.labels" . | nindent 4 }}
+data:
+  SUPERSET_LOAD_EXAMPLES: "no"
+  REDIS_HOST: {{ .Values.externalRedis.host | quote }}
+  REDIS_PORT: {{ .Values.externalRedis.port | quote }}
+  REDIS_CELERY_DB: {{ .Values.externalRedis.celeryDb | quote }}
+  REDIS_RESULTS_DB: {{ .Values.externalRedis.resultsDb | quote }}
+  REDIS_CACHE_DB: {{ .Values.externalRedis.cacheDb | quote }}
+  POSTGRES_DB: {{ .Values.externalPostgres.database | quote }}
+  POSTGRES_USER: {{ .Values.externalPostgres.username | quote }}
+  POSTGRES_HOST: {{ .Values.externalPostgres.host | quote }}
+  POSTGRES_PORT: {{ .Values.externalPostgres.port | quote }}
+  ADMIN_USERNAME: {{ .Values.superset.admin.username | quote }}
+  ADMIN_EMAIL: {{ .Values.superset.admin.email | quote }}
+  GCS_DATA_PATH: {{ .Values.superset.gcs.dataPath | quote }}

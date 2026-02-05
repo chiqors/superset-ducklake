@@ -35,6 +35,7 @@ graph TD
 - **Scalable Architecture**: 
   - **Simple Mode**: Monolithic container for development.
   - **Production Mode**: Microservices with Async Workers, **Valkey** caching, and **Celery**.
+  - **Kubernetes Ready**: Helm charts included for cloud-native deployment.
 - **MotherDuck Support**: Optional integration for cloud-native scaling.
 
 ## Prerequisites
@@ -42,6 +43,7 @@ graph TD
 - Docker & Docker Compose
 - Google Cloud Storage (GCS) Bucket and HMAC Keys (Access Key & Secret)
 - (Optional) MotherDuck Token
+- (Optional) Kubernetes Cluster & Helm (for K8s deployment)
 
 ## Quick Start (Simple Mode)
 
@@ -87,6 +89,34 @@ Ideal for high traffic, multiple analysts, and heavy query loads. Uses **Valkey*
     - **superset-worker-beat**: Scheduler.
     - **valkey**: High-performance cache & message broker (Redis compatible).
     - **postgres**: Metadata store.
+
+## Kubernetes Deployment (Helm)
+
+We provide a production-ready Helm chart in `charts/superset`.
+
+1.  **Configure `values.yaml`**:
+    Update `charts/superset/values.yaml` with your external Postgres and Redis/Valkey details.
+
+2.  **Install Chart**:
+    ```bash
+    helm install superset ./charts/superset \
+      --set commonLabels.environment=production
+    ```
+
+See [charts/superset/README.md](charts/superset/README.md) for detailed configuration options.
+
+## CI/CD Pipeline
+
+Automated workflows are configured for GitHub Actions:
+
+- **Docker Publish**: Builds and pushes the Superset image to GHCR on new tags (e.g., `v1.0.0`).
+- **Helm Release**: Packages and pushes the Helm chart to GHCR OCI registry on new tags.
+
+To trigger a release:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ## Configuration
 
@@ -140,6 +170,7 @@ Then query `my_view` in Superset.
 - `docker/`: Docker configuration and scripts.
   - `scripts/`: Initialization and configuration scripts.
   - `superset_config.py`: Superset Python configuration (hooks for DuckLake, Caching, Celery).
+- `charts/`: Kubernetes Helm charts.
 - `docker-compose.yml`: **Simple/Dev** orchestration.
 - `docker-compose-prod.yml`: **Production** orchestration (Valkey, Workers).
 

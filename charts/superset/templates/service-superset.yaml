@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "superset.fullname" . }}
+  namespace: {{ include "superset.namespace" . }}
+  labels:
+    {{- include "superset.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8088
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "superset.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: superset

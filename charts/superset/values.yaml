@@ -1,0 +1,99 @@
+# Default values for superset-ducklake.
+# This is a YAML-formatted file.
+
+image:
+  repository: ghcr.io/chiqors/superset
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+commonLabels: {}
+  # environment: production
+  # team: data
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8088
+
+ingress:
+  enabled: false
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Superset Configuration
+superset:
+  secretKey: "CHANGE_ME_IN_PRODUCTION"
+  admin:
+    username: "admin"
+    password: "admin"
+    email: "admin@superset.com"
+  
+  # DuckLake / GCS Configuration
+  gcs:
+    keyId: ""
+    secret: ""
+    dataPath: ""
+  
+  # MotherDuck (Optional)
+  motherduck:
+    token: ""
+
+# Worker Configuration (Celery)
+worker:
+  enabled: true
+  replicas: 1
+  command: ["celery", "--app=superset.tasks.celery_app:app", "worker", "--pool=gevent", "-c", "10", "--loglevel=INFO"]
+  resources: {}
+
+# Worker Beat Configuration (Celery Beat - Optional, usually one instance)
+workerBeat:
+  enabled: false
+  replicas: 1
+  command: ["celery", "--app=superset.tasks.celery_app:app", "beat", "--loglevel=INFO"]
+  resources: {}
+
+# External Database (Postgres)
+# REQUIRED: You must provide external Postgres connection details
+externalPostgres:
+  host: "postgres-host"
+  port: 5432
+  database: "superset"
+  username: "superset"
+  password: "superset_password"
+
+# External Cache/Broker (Valkey/Redis)
+# REQUIRED: You must provide external Valkey/Redis connection details
+externalRedis:
+  host: "valkey-host"
+  port: 6379
+  celeryDb: "0"
+  resultsDb: "1"
+  cacheDb: "2"

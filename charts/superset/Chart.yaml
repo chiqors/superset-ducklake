@@ -1,0 +1,6 @@
+apiVersion: v2
+name: superset-ducklake
+description: A Helm chart for Superset with DuckLake integration (DuckDB + Postgres Metadata + GCS) and Valkey caching.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

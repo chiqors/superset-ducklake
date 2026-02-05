@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "superset.fullname" . }}
+  namespace: {{ include "superset.namespace" . }}
+  labels:
+    {{- include "superset.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "superset.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: superset
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "superset.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: superset
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "superset.fullname" . }}-sa
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/app/superset-init.sh"]
+          ports:
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+          env:
+            - name: SUPERSET_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: SUPERSET_SECRET_KEY
+            - name: SQLALCHEMY_DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: SQLALCHEMY_DATABASE_URI
+            - name: ADMIN_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: ADMIN_USERNAME
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_EMAIL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: ADMIN_EMAIL
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: REDIS_PORT
+            - name: REDIS_CELERY_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: REDIS_CELERY_DB
+            - name: REDIS_RESULTS_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: REDIS_RESULTS_DB
+            - name: REDIS_CACHE_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: REDIS_CACHE_DB
+            - name: GCS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: GCS_KEY_ID
+            - name: GCS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: GCS_SECRET
+            - name: GCS_DATA_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: GCS_DATA_PATH
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: POSTGRES_DB
+            {{- if .Values.superset.motherduck.token }}
+            - name: MOTHERDUCK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: MOTHERDUCK_TOKEN
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
