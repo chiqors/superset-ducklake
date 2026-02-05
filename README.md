@@ -10,9 +10,9 @@ This repository contains a production-ready configuration for Apache Superset in
 ```mermaid
 graph TD
     User[User] -->|SQL/UI| Superset
-    Superset -->|DuckDB Engine| DuckDB[DuckDB (In-Memory)]
-    DuckDB -->|Attach| Postgres[Postgres (Metadata Store)]
-    DuckDB -->|Read/Write| GCS[Google Cloud Storage (Data Lake)]
+    Superset -->|DuckDB Engine| DuckDB["DuckDB (In-Memory)"]
+    DuckDB -->|Attach| Postgres["Postgres (Metadata Store)"]
+    DuckDB -->|Read/Write| GCS["Google Cloud Storage (Data Lake)"]
     
     subgraph "Superset Container"
         Superset
