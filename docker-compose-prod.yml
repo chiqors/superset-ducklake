@@ -57,6 +57,8 @@ services:
       GCS_SECRET: "${GCS_SECRET}"
       GCS_DATA_PATH: "${GCS_DATA_PATH}"
       POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
 
       # MotherDuck Configuration (Optional - Uncomment to enable)
       # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
@@ -90,6 +92,8 @@ services:
       GCS_SECRET: "${GCS_SECRET}"
       GCS_DATA_PATH: "${GCS_DATA_PATH}"
       POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
       
       # MotherDuck Configuration (Optional - Uncomment to enable)
       # MOTHERDUCK_TOKEN: "${MOTHERDUCK_TOKEN}"
