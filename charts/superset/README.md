@@ -8,6 +8,7 @@ A production-ready Helm chart for deploying Apache Superset with DuckLake integr
 - **High Availability**: Supports multiple replicas for web and worker components.
 - **Async Execution**: Integrated Celery workers for handling long-running queries.
 - **External Dependencies**: Designed to connect to managed Postgres and Redis/Valkey services.
+- **Multi-Cloud Storage**: Supports both Google Cloud Storage (GCS) and Amazon S3 / MinIO for DuckLake data.
 - **Cloud Native**: Supports Kubernetes secrets, configmaps, and resource limits.
 
 ## Prerequisites
@@ -59,12 +60,26 @@ A production-ready Helm chart for deploying Apache Superset with DuckLake integr
       resultsDb: "1"
       cacheDb: "2"
     
-    # GCS Configuration (for DuckLake)
+    # DuckLake Storage Configuration
     superset:
-      gcs:
-        keyId: "YOUR_ACCESS_KEY"
-        secret: "YOUR_SECRET_KEY"
-        dataPath: "gs://your-bucket/"
+      # Choose 'gcs' or 's3'
+      storageDriver: "s3"
+      
+      # If using S3:
+      s3:
+        accessKeyId: "AWS_ACCESS_KEY"
+        secretAccessKey: "AWS_SECRET_KEY"
+        bucketPath: "s3://my-data-bucket/"
+        region: "us-east-1"
+        # Optional: endpoint for MinIO
+        # endpoint: "minio:9000"
+    
+      # If using GCS:
+      # storageDriver: "gcs"
+      # gcs:
+      #   keyId: "GCS_ACCESS_KEY"
+      #   secret: "GCS_SECRET"
+      #   bucketPath: "gs://my-data-bucket/"
     
     # Scaling
     worker:

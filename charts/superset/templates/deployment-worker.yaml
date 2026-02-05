@@ -82,11 +82,51 @@ spec:
                 secretKeyRef:
                   name: {{ include "superset.fullname" . }}-secret
                   key: GCS_SECRET
-            - name: GCS_DATA_PATH
+            - name: DUCKLAKE_STORAGE_DRIVER
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "superset.fullname" . }}-config
-                  key: GCS_DATA_PATH
+                  key: DUCKLAKE_STORAGE_DRIVER
+            - name: GCS_BUCKET_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: GCS_BUCKET_PATH
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "superset.fullname" . }}-secret
+                  key: S3_SECRET_ACCESS_KEY
+            - name: S3_BUCKET_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: S3_BUCKET_PATH
+            - name: S3_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: S3_ENDPOINT
+            - name: S3_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: S3_REGION
+            - name: S3_URL_STYLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: S3_URL_STYLE
+            - name: S3_USE_SSL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "superset.fullname" . }}-config
+                  key: S3_USE_SSL
             - name: POSTGRES_DUCKLAKE_DB
               valueFrom:
                 configMapKeyRef:

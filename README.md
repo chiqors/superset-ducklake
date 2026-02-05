@@ -3,7 +3,9 @@
 This repository contains a production-ready configuration for Apache Superset integrated with **DuckLake**. It enables a stateless analytics architecture where:
 - **Compute**: DuckDB (running within Superset container)
 - **Metadata**: PostgreSQL (persistent storage for DuckDB/DuckLake catalogs)
-- **Data**: Google Cloud Storage (GCS) (parquet/iceberg files)
+- **Data**: 
+  - **Google Cloud Storage (GCS)**
+  - **Amazon S3 / MinIO** (Any S3-compatible storage)
 
 ## Architecture
 
@@ -13,7 +15,7 @@ graph TD
     Superset -->|DuckDB Engine| DuckDB["DuckLake Analytics (In-Memory)"]
     Superset -->|Postgres Engine| PGMetadata["DuckLake Metadata (Postgres)"]
     DuckDB -->|Attach| Postgres["Postgres (Metadata Store)"]
-    DuckDB -->|Read/Write| GCS["Google Cloud Storage (Data Lake)"]
+    DuckDB -->|Read/Write| GCS["GCS / S3 / MinIO (Data Lake)"]
     DuckDB -.->|Optional| MotherDuck["MotherDuck (Cloud)"]
     
     subgraph "Superset Stack"
@@ -36,7 +38,8 @@ graph TD
 - **Dual Connection**:
     - **DuckLake Analytics**: The high-performance DuckDB engine for querying your data lake.
     - **DuckLake Metadata**: A direct Postgres connection to inspect your schemas, tables, and internal DuckDB metadata.
-- **Secure Credentials**: GCS credentials are managed via environment variables and persistent DuckDB secrets.
+- **Multi-Cloud Support**: Connect to **GCS**, **AWS S3**, or self-hosted **MinIO** simultaneously.
+- **Secure Credentials**: Credentials are managed via environment variables and persistent DuckDB secrets.
 - **Scalable Architecture**: 
   - **Simple Mode**: Monolithic container for development.
   - **Production Mode**: Microservices with Async Workers, **Valkey** caching, and **Celery**.
@@ -46,7 +49,9 @@ graph TD
 ## Prerequisites
 
 - Docker & Docker Compose
-- Google Cloud Storage (GCS) Bucket and HMAC Keys (Access Key & Secret)
+- **Data Lake Storage**:
+  - Google Cloud Storage (GCS) Bucket and HMAC Keys
+  - **OR** Amazon S3 / MinIO Bucket and Access Keys
 - (Optional) MotherDuck Token
 - (Optional) Kubernetes Cluster & Helm (for K8s deployment)
 
@@ -64,7 +69,7 @@ Ideal for development, testing, or small teams. Runs Superset as a single servic
     Copy the example file and update it with your credentials:
     ```bash
     cp .env.example .env
-    # Edit .env and set GCS_KEY_ID, GCS_SECRET, GCS_DATA_PATH
+    # Edit .env and set GCS_KEY_ID/SECRET or S3_ACCESS_KEY_ID/SECRET
     ```
 
 3.  **Start Services**:
@@ -125,13 +130,40 @@ git push origin v1.0.0
 
 ## Configuration
 
-### Environment Variables (`.env`)
+Configuration is managed via environment variables in `.env`.
+
+### Storage Driver Selection
+You must specify which storage backend to use for the primary `ducklake_analytics` catalog.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DUCKLAKE_STORAGE_DRIVER` | `gcs` or `s3` | `gcs` |
+
+### Google Cloud Storage (GCS)
+Required if `DUCKLAKE_STORAGE_DRIVER=gcs`.
 
 | Variable | Description |
 |----------|-------------|
 | `GCS_KEY_ID` | GCS HMAC Access Key |
 | `GCS_SECRET` | GCS HMAC Secret |
-| `GCS_DATA_PATH` | Base GCS URI (e.g., `gs://my-analytics-bucket/`) |
+| `GCS_BUCKET_PATH` | Base GCS URI (e.g., `gs://my-analytics-bucket/`) |
+
+### Amazon S3 / MinIO
+Required if `DUCKLAKE_STORAGE_DRIVER=s3`.
+
+| Variable | Description |
+|----------|-------------|
+| `S3_ACCESS_KEY_ID` | AWS/MinIO Access Key |
+| `S3_SECRET_ACCESS_KEY` | AWS/MinIO Secret Key |
+| `S3_BUCKET_PATH` | Base S3 URI (e.g., `s3://my-analytics-bucket/`) |
+| `S3_ENDPOINT` | Custom S3 Endpoint (e.g., `minio:9000`). Leave empty for AWS. |
+| `S3_REGION` | S3 Region (default: `us-east-1`) |
+| `S3_URL_STYLE` | `path` (MinIO/GCS) or `vhost` (AWS) |
+| `S3_USE_SSL` | `true` or `false` |
+
+### Other
+| Variable | Description |
+|----------|-------------|
 | `MOTHERDUCK_TOKEN` | (Optional) Token for MotherDuck integration |
 | `SUPERSET_SECRET_KEY` | Security key (generated automatically) |
 | `POSTGRES_DUCKLAKE_DB` | DuckLake Metadata DB Name (default: `ducklake_analytics`) |

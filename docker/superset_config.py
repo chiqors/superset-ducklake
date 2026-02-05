@@ -93,9 +93,22 @@ SUPERSET_WEBSERVER_TIMEOUT = 300
 # ---------------------------------------------------------
 # DuckLake Configuration
 # ---------------------------------------------------------
+DUCKLAKE_STORAGE_DRIVER = os.environ.get("DUCKLAKE_STORAGE_DRIVER", "gcs").lower()
+
 GCS_KEY_ID = os.environ.get("GCS_KEY_ID")
 GCS_SECRET = os.environ.get("GCS_SECRET")
-GCS_DATA_PATH = os.environ.get("GCS_DATA_PATH")
+# Support legacy GCS_DATA_PATH or new GCS_BUCKET_PATH
+GCS_BUCKET_PATH = os.environ.get("GCS_BUCKET_PATH") or os.environ.get("GCS_DATA_PATH")
+
+# S3 / MinIO Configuration
+S3_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY_ID")
+S3_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_ACCESS_KEY")
+S3_BUCKET_PATH = os.environ.get("S3_BUCKET_PATH")
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
+S3_REGION = os.environ.get("S3_REGION", "us-east-1")
+S3_URL_STYLE = os.environ.get("S3_URL_STYLE", "path")
+S3_USE_SSL = os.environ.get("S3_USE_SSL", "true")
+
 PG_USER = os.environ.get("POSTGRES_DUCKLAKE_USER", "superset")
 PG_PASS = os.environ.get("POSTGRES_DUCKLAKE_PASSWORD", "superset")
 PG_HOST = os.environ.get("POSTGRES_DUCKLAKE_HOST", "postgres")
@@ -120,26 +133,24 @@ def ducklake_connect(dbapi_connection, connection_record):
                         print(f"Warning: Failed to load MotherDuck extension: {e}")
 
                 # Check if this is the DuckLake Analytics connection
-                # We can't easily check the DB name here, but we can check if environment vars are present.
-                # Since we want to enable DuckLake for ANY DuckDB connection in this container (simplest approach),
-                # we proceed.
                 
-                if GCS_DATA_PATH and PG_DB and GCS_KEY_ID and GCS_SECRET:
-                    # Construct Postgres connection string in Key-Value format (libpq style)
-                    # This is more robust for the postgres extension when used with DuckLake
-                    pg_conn_str = f"dbname={PG_DB} user={PG_USER} password={PG_PASS} host={PG_HOST} port={PG_PORT}"
-                    
-                    # 1. Install and Load Extensions
-                    cursor.execute("INSTALL httpfs")
-                    cursor.execute("LOAD httpfs")
-                    cursor.execute("INSTALL postgres")
-                    cursor.execute("LOAD postgres")
-                    cursor.execute("INSTALL ducklake")
-                    cursor.execute("LOAD ducklake")
-                    
-                    # 2. Create GCS Secret (Required for In-Memory)
-                    # Use CREATE SECRET (Idempotent check not strictly needed if we use CREATE OR REPLACE or just overwrite)
-                    # DuckDB 0.10+ syntax:
+                # Determine DATA_PATH based on storage driver
+                DATA_PATH = None
+                if DUCKLAKE_STORAGE_DRIVER == "s3":
+                    DATA_PATH = S3_BUCKET_PATH
+                else:
+                    DATA_PATH = GCS_BUCKET_PATH
+                
+                # 1. Install and Load Extensions
+                cursor.execute("INSTALL httpfs")
+                cursor.execute("LOAD httpfs")
+                cursor.execute("INSTALL postgres")
+                cursor.execute("LOAD postgres")
+                cursor.execute("INSTALL ducklake")
+                cursor.execute("LOAD ducklake")
+                
+                # 2. Create GCS Secret (if configured)
+                if GCS_KEY_ID and GCS_SECRET:
                     cursor.execute("DROP SECRET IF EXISTS gcs_secret")
                     cursor.execute(f"""
                         CREATE SECRET gcs_secret (
@@ -149,14 +160,39 @@ def ducklake_connect(dbapi_connection, connection_record):
                         )
                     """)
                     
-                    # 3. Attach DuckLake
-                    # Use unique alias and explicit DATA_PATH option
-                    cursor.execute(f"ATTACH 'ducklake:postgres:{pg_conn_str}' AS ducklake_analytics (DATA_PATH '{GCS_DATA_PATH}')")
+                # 3. Create S3 Secret (if configured)
+                if S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY:
+                    # Construct S3 Secret parameters
+                    s3_secret_params = [
+                        "TYPE S3",
+                        f"KEY_ID '{S3_ACCESS_KEY_ID}'",
+                        f"SECRET '{S3_SECRET_ACCESS_KEY}'",
+                        f"REGION '{S3_REGION}'",
+                        f"URL_STYLE '{S3_URL_STYLE}'",
+                        f"USE_SSL {S3_USE_SSL}"
+                    ]
+                    if S3_ENDPOINT:
+                         s3_secret_params.append(f"ENDPOINT '{S3_ENDPOINT}'")
+                         
+                    cursor.execute("DROP SECRET IF EXISTS s3_secret")
+                    cursor.execute(f"""
+                        CREATE SECRET s3_secret (
+                            {', '.join(s3_secret_params)}
+                        )
+                    """)
+
+                # 4. Attach DuckLake (if DATA_PATH is available)
+                if DATA_PATH and PG_DB:
+                    # Construct Postgres connection string in Key-Value format (libpq style)
+                    pg_conn_str = f"dbname={PG_DB} user={PG_USER} password={PG_PASS} host={PG_HOST} port={PG_PORT}"
                     
-                    # 4. Set as default catalog
+                    # Use unique alias and explicit DATA_PATH option
+                    cursor.execute(f"ATTACH 'ducklake:postgres:{pg_conn_str}' AS ducklake_analytics (DATA_PATH '{DATA_PATH}')")
+                    
+                    # 5. Set as default catalog
                     cursor.execute("USE ducklake_analytics")
                     
-                    print(f"Successfully configured DuckLake for connection: {conn_type}")
+                    print(f"Successfully configured DuckLake for connection: {conn_type} using driver: {DUCKLAKE_STORAGE_DRIVER}")
             finally:
                 # cursor.close() 
                 pass

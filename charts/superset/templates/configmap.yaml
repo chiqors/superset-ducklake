@@ -18,4 +18,10 @@ data:
   POSTGRES_DUCKLAKE_PORT: {{ .Values.ducklakePostgres.port | quote }}
   ADMIN_USERNAME: {{ .Values.superset.admin.username | quote }}
   ADMIN_EMAIL: {{ .Values.superset.admin.email | quote }}
-  GCS_DATA_PATH: {{ .Values.superset.gcs.dataPath | quote }}
+  DUCKLAKE_STORAGE_DRIVER: {{ .Values.superset.storageDriver | quote }}
+  GCS_BUCKET_PATH: {{ .Values.superset.gcs.bucketPath | quote }}
+  S3_BUCKET_PATH: {{ .Values.superset.s3.bucketPath | quote }}
+  S3_ENDPOINT: {{ .Values.superset.s3.endpoint | quote }}
+  S3_REGION: {{ .Values.superset.s3.region | quote }}
+  S3_URL_STYLE: {{ .Values.superset.s3.urlStyle | quote }}
+  S3_USE_SSL: {{ .Values.superset.s3.useSsl | quote }}

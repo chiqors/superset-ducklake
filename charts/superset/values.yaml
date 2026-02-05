@@ -57,10 +57,23 @@ superset:
     email: "admin@superset.com"
   
   # DuckLake / GCS Configuration
+  # Choose storage driver: 'gcs' or 's3'
+  storageDriver: "gcs"
+
   gcs:
     keyId: ""
     secret: ""
-    dataPath: ""
+    bucketPath: "" # e.g. gs://your-bucket/path/
+
+  # S3 / MinIO Configuration
+  s3:
+    accessKeyId: ""
+    secretAccessKey: ""
+    bucketPath: "" # e.g. s3://your-bucket/path/
+    endpoint: "" # Leave empty for AWS S3
+    region: "us-east-1"
+    urlStyle: "path" # 'path' or 'vhost'
+    useSsl: "true"
   
   # MotherDuck (Optional)
   motherduck:
