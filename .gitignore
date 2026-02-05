@@ -5,3 +5,4 @@ __pycache__
 .DS_Store
 data/
 docker/scripts/__pycache__/
+rustfs-data/
