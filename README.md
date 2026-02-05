@@ -147,3 +147,9 @@ Then query `my_view` in Superset.
 
 - **"No such file or directory" during attach**: Ensure the Postgres service is healthy and the `POSTGRES_DB` exists.
 - **Async Queries Stuck**: If running in Production mode, ensure `superset-worker` is running and connected to `valkey`. Check logs: `docker logs superset_worker`.
+
+## License & Attribution
+
+This project is licensed under the [MIT License](LICENSE).
+
+We deeply appreciate the open-source community. If you use this project or derive work from it, **attribution is greatly appreciated**. A simple mention or link back to this repository helps us grow and continue contributing to the ecosystem.
