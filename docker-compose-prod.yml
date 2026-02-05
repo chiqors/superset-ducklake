@@ -46,8 +46,11 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       
       # Redis/Valkey Config
-      REDIS_HOST: valkey
-      REDIS_PORT: 6379
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_CELERY_DB: "${REDIS_CELERY_DB}"
+      REDIS_RESULTS_DB: "${REDIS_RESULTS_DB}"
+      REDIS_CACHE_DB: "${REDIS_CACHE_DB}"
 
       # DuckLake Configuration
       GCS_KEY_ID: "${GCS_KEY_ID}"
@@ -76,8 +79,11 @@ services:
     environment:
       SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
       SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
-      REDIS_HOST: valkey
-      REDIS_PORT: 6379
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_CELERY_DB: "${REDIS_CELERY_DB}"
+      REDIS_RESULTS_DB: "${REDIS_RESULTS_DB}"
+      REDIS_CACHE_DB: "${REDIS_CACHE_DB}"
       
       # DuckLake Configuration (Workers need access for async queries)
       GCS_KEY_ID: "${GCS_KEY_ID}"
@@ -102,8 +108,11 @@ services:
     environment:
       SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY}"
       SQLALCHEMY_DATABASE_URI: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/superset"
-      REDIS_HOST: valkey
-      REDIS_PORT: 6379
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+      REDIS_CELERY_DB: "${REDIS_CELERY_DB}"
+      REDIS_RESULTS_DB: "${REDIS_RESULTS_DB}"
+      REDIS_CACHE_DB: "${REDIS_CACHE_DB}"
     restart: unless-stopped
 
 volumes:
