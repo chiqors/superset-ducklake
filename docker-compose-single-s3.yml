@@ -10,7 +10,7 @@ services:
       POSTGRES_MULTIPLE_DATABASES: superset
       POSTGRES_DUCKLAKE_DB: ${POSTGRES_DUCKLAKE_DB:-ducklake_analytics}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -36,7 +36,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./rustfs-data:/data
+      - rustfs-data:/data
 
   superset:
     build:
@@ -93,4 +93,5 @@ services:
     command: ["/app/superset-init.sh"]
 
 volumes:
-  pgdata:
+  pgdata: {}
+  rustfs-data: {}
